@@ -11,7 +11,7 @@ Alt+S : Stop and Restart
 Note: Board size have to be full screen (look image if you still can't do it)
 
 # Image
-[Image](https://github.com/nguyencongminh090/Program/blob/master/Board.png)
+![Image](https://github.com/nguyencongminh090/Program/blob/master/Board.png)
 
 
 

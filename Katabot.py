@@ -6,23 +6,25 @@ import pyautogui
 from Coordinates import *
 from connect import *
 import keyboard
+import win32api, win32con
+from connect import timeleft as tmleft
 
 mouse = Controller()
 
 def main():
     p = mouse.position
     
-    x, y = pyautogui.locateCenterOnScreen('Playok/Logo.png')
-    pyautogui.moveTo(x,y,duration=0.0)
-    mouse.click(Button.left,1)
-    time.sleep(0.3)
-    try:
-        x, y = pyautogui.locateCenterOnScreen('Playok/Topr.png')
-    except:
-        x, y = pyautogui.locateCenterOnScreen('Pk/Trrs.png')
+    while True:
+        try:
+                x,y = pyautogui.locateCenterOnScreen('Kata\ptop.png')
+                a = (x, y)
+                break
+        except:
+                continue
     
     pyautogui.moveTo(x,y,duration=0.0)
-    a = mouse.position
+    a = mouse.position    
+   
     print('A:', a)
 
     
@@ -30,7 +32,7 @@ def main():
     print('kx:',kcx)
     kcy = 41.6
     print('ky:',kcy)
-
+    
     x = a[0] + kcx
     y = a[1] - kcy
 
@@ -96,28 +98,56 @@ def main():
                 output = list[k]
                 return output
 
-    def click():
-        mouse.click(Button.left,1)
+    def click(a):
+##        mouse.click(Button.left,1)
+        win32api.SetCursorPos((a[0],a[1]))
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,0,0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,0,0)
     
     def move(move):
         mouse.position = move
-        
+    def undo():
+        try:
+            try:
+                v, b = pyautogui.locateCenterOnScreen('Kata\ccc.png',confidence=0.9)
+                
+                color = 'Black'
+            except:
+                v, b = pyautogui.locateCenterOnScreen('Kata\wht.png',confidence=0.8)
+                color = 'White'
+            k = (v,b)
+            tmp = returnpos(k)
+            if tmp == None:
+                tmp = guess(k, value)
+                tmp = returnpos(tmp)
+            moves = pktool(tmp,0)
+            put('takeback '+moves)
+            print('Movek:',moves)
+        except:
+            time.sleep(0)
     
-    exit = 0
-    def pwh():
-        timeleft = int(tinput()) 
+    exi = 0
+    log = []
+    def pwh(a):
+        timeleft = a
+##        timeleft = int(tinput()) 
         print('Timematch:',timeleft,'seconds')
-        while exit == 0:
+        while exi == 0:
             if keyboard.is_pressed('alt+s') == True:
                 break
+            if keyboard.is_pressed('esc') == True:
+                close = pyautogui.confirm('Are you want to quit?',title='Gomoku Bot',buttons=('Yes','No'))
+                if close == 'Yes':
+                    end()
+                    exit()
+                    break            
             try:
                 try:
-                    v, b = pyautogui.locateCenterOnScreen('Playok\sss.png',confidence=0.9)
-##                  r = mouse.position
+                    v, b = pyautogui.locateCenterOnScreen('Kata\ccc.png',confidence=0.9)
                 
                     color = 'Black'
                 except:
-                    v, b = pyautogui.locateCenterOnScreen('Playok\pts.png',confidence=0.9)
+                    v, b = pyautogui.locateCenterOnScreen('Kata\wht.png',confidence=0.8)
                     color = 'White'
                 k = (v,b)
                 try:
@@ -128,47 +158,78 @@ def main():
                 if tmp == None:
                     tmp = guess(k, value)
                     tmp = returnpos(tmp)
+                if keyboard.is_pressed('alt+u'):                    
+                    undo()
+                    x, y = pyautogui.locateCenterOnScreen('Kata\Back.png',confidence=0.9)
+                    click((x,y))
+                    undo()
+                    click((x,y))
+                    
+                    
                 if tk != tmp:
-                    print('--> Moved:', tmp,'-',color)
-                    moves = pktool(tmp,0)
-                
-                    if color == 'Black':
+##                    print('--> Moved:', tmp,'-',color)
+                    log.append(tmp)
+                    moves = pktool(tmp,0)                    
+                    if color == 'Black':                        
                         a = clock()
                         movet = playb(moves)
+                        ev = movet[1]
+                        print('--> Evaluation:',ev)
                         b = clock()
-                        movet = pktool(movet,1)
-                        pyautogui.moveTo(returnmove(movet))
-                        click()
-                        print('Engine move:',movet)
+                        if ev == '-M0':
+                            break
+                        movet = pktool(movet[0],1)
+                        moveto = returnmove(movet)
+                        click(moveto)
+##                        put('turn 14,7')
+##                        print(debug())
+                        if ev == '+M1':
+                            break
+                        ##print('Engine move:',movet)
                         tl = round(round(b-a, 3) * 1000)
                         timeleft = timeleft - tl
                         print('-----------------------------------')
                         print('Time left:',timeleft / 1000,'second')
                         print('-----------------------------------')
-                        timeleft(timeleft)
+                        tmleft(timeleft)
+                        
+                            
+
             except:
 ##                restart()
                 continue
 
-    def pbl():
+    def pbl(a):
 ##            keyboard.wait('Ctrl + B')
-        timeleft = int(tinput()) 
+##        timeleft = int(tinput())
+        timeleft = a 
         print('Timematch:',timeleft,'seconds')
         movet = begin()
         movet = pktool(movet,1)
-        pyautogui.moveTo(returnmove(movet))
-        click()
-        while exit == 0:
+        moveto = returnmove(movet)
+        click(moveto)
+        while exi == 0:
             if keyboard.is_pressed('alt+s') == True:
                 break
+            if keyboard.is_pressed('esc') == True:
+                close = pyautogui.confirm('Are you want to quit?',title='Gomoku Bot',buttons=('Yes','No'))
+                if close == 'Yes':
+                    end()                    
+                    break
+            if keyboard.is_pressed('alt+u'):                    
+                    undo()
+                    x, y = pyautogui.locateCenterOnScreen('Kata\Back.png',confidence=0.9)
+                    click((x,y))
+                    undo()
+                    click((x,y))
             try:
                 try:
-                    v, b = pyautogui.locateCenterOnScreen('Playok\sss.png',confidence=0.9)
+                    v, b = pyautogui.locateCenterOnScreen('Kata\ccc.png')
 ##                  r = mouse.position
                 
                     color = 'Black'
                 except:
-                    v, b = pyautogui.locateCenterOnScreen('Playok\pts.png',confidence=0.9)
+                    v, b = pyautogui.locateCenterOnScreen('Kata\wht.png',confidence=0.8)
                     color = 'White'
                 k = (v,b)
                 try:
@@ -180,43 +241,53 @@ def main():
                     tmp = guess(k, value)
                     tmp = returnpos(tmp)
                 if tk != tmp:
-                    print('--> Moved:', tmp,'-',color)
+                    ##print('--> Moved:', tmp,'-',color)
+                    log.append(tmp)
                     moves = pktool(tmp,0)
                 
                     if color == 'White':
                         a = clock()
                         movet = playw(moves)
                         b = clock()
-                        movet = pktool(movet,1)
-                        pyautogui.moveTo(returnmove(movet))
-                        click()
-                        print('Engine move:',movet)
+                        ev = movet[1]
+                        print('--> Evaluation:',ev)                        
+                        if ev == '-M0':
+                            break
+                        movet = pktool(movet[0],1)
+                        moveto = returnmove(movet)
+                        click(moveto)
+                        if ev == '+M1':
+                            break
+                        ##print('Engine move:',movet)
                         tl = round(round(b-a, 3) * 1000)
                         timeleft = timeleft - tl
                         print('-----------------------------------')
                         print('Time left:',timeleft / 1000,'second')
                         print('-----------------------------------')
-                        timeleft(timeleft)
-
+                        tmleft(timeleft)
             except:
 ##                restart()
                 continue
         
     while True:
         if keyboard.is_pressed('alt+b') == True:
-            pbl()
+            timeleft = int(tinput())
+            pbl(timeleft)
         if keyboard.is_pressed('alt+w') == True:
-            pwh()
-        if keyboard.is_pressed('alt+s') == True:
-            restart()
+            timeleft = int(tinput())
+            pwh(timeleft)
+        if keyboard.is_pressed('alt+s') == True:            
+            outlog = ' '.join(log)
+            log.clear()
+            f = open('Log.ob','a')
+            f.write('Game played\n')
+            f.write('----------------\n\n')
+            f.write(outlog + '\n')
+            f.close()
+            restart()            
             if keyboard.is_pressed('alt+b') == True:
                 pbl()
             elif keyboard.is_pressed('alt+w') == True:
-                pwh()
-            pa = pyautogui.confirm('Play as?',title='Gomoku Bot',buttons=('Black','White'))
-            if pa == 'Black':
-                pbl()
-            elif pa == 'White':
                 pwh()
         if keyboard.is_pressed('esc') == True:
             close = pyautogui.confirm('Are you want to quit?',title='Gomoku Bot',buttons=('Yes','No'))
@@ -243,4 +314,4 @@ def main():
 	
 
 main()
-os.system('pause>nul')
+
